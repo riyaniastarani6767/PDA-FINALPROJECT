@@ -1,265 +1,184 @@
 """
-svm_manual.py
-=============
-Support Vector Machine (SVM) kernel RBF yang dibuat manual dengan NumPy
-(tanpa scikit-learn).
+Support Vector Machine manual dengan kernel RBF
+(Laporan Subbab 2.1.8, 2.1.8.1, dan 3.4.4.4 – Flowchart Training & Testing SVM).
 
-Tahapan mengikuti flowchart Training & Testing SVM (Bab III, Gambar 3.9 dan 3.10):
+Training (Gambar 3.10):
+1. Input data latih (30 fitur + label).
+2. Ubah label: Malignant = +1, Benign = -1.
+3-4. Standardisasi z-score dilakukan di preprocessing (mu dan sigma dari data latih),
+     dan disimpan bersama model (lihat train.py).
+5. Tentukan kernel RBF serta parameter C dan gamma. Default C = 1,0 dan gamma = 'scale',
+   yaitu gamma = 1 / (jumlah_fitur x varians data), sama dengan nilai bawaan scikit-learn.
+6. Hitung nilai kernel K(xi, xj) = exp(-gamma * ||xi - xj||^2) (Persamaan 2.6).
+7. Selesaikan optimasi soft margin (Persamaan 2.4 dan 2.5) dalam bentuk dual:
+       min  1/2 sum_i sum_j a_i a_j y_i y_j K(xi, xj) - sum_i a_i
+       syarat 0 <= a_i <= C  dan  sum_i a_i y_i = 0
+   menggunakan algoritma SMO (Sequential Minimal Optimization).
+8. Peroleh support vector (a_i > 0), bobot (a_i * y_i), dan bias b -> hyperplane (Persamaan 2.3).
+9. Model SVM terlatih = support vector, bobot, bias b, C, gamma (+ mu, sigma dari scaler).
 
-TRAINING (fit)
-  1. Label 0/1 diubah menjadi -1/+1   (Malignant = +1, Benign = -1)
-  2. Tentukan kernel RBF serta parameter C dan gamma
-  3. Hitung nilai kernel K(xi, xj) untuk setiap pasangan data latih
-  4. Selesaikan optimasi soft margin dengan algoritma SMO
-     (Sequential Minimal Optimization, Platt 1998)
-  5. Simpan support vector (alpha > 0) dan bias b  -> model terlatih
-  6. (Opsional) latih fungsi sigmoid (Platt scaling) agar SVM bisa
-     mengeluarkan probabilitas malignant
+Testing (Gambar 3.11):
+- Hitung K(x, SV) untuk setiap support vector.
+- Fungsi keputusan p(x) = sum_i (a_i y_i) K(x_i, x) + b.
+- Jika p(x) > 0 -> Malignant (+1), selain itu -> Benign (-1).
 
-TESTING (predict)
-  1. Hitung kernel antara data baru dan support vector
-  2. Hitung fungsi keputusan p(x) = sum(alpha_i * y_i * K(x_i, x)) + b
-  3. Kelas = sign[p(x)]  -> +1 Malignant (1), -1 Benign (0)
-
-CATATAN
-  * Data yang masuk ke fit/predict HARUS sudah distandardisasi (z-score)
-    oleh data.py (bagian Teman 2). Kelas ini tidak melakukan standardisasi.
-  * Antarmuka sama dengan model RF:
-        model.fit(X_train, y_train)   # X: (n, 30), y: 0/1
-        model.predict(X)              # -> array 0/1
-        model.predict_proba(X)        # -> array probabilitas malignant (0-1)
+Probabilitas malignant untuk aplikasi diperoleh dengan Platt scaling:
+P(malignant | x) = 1 / (1 + exp(A * p(x) + B)).
 """
+from __future__ import annotations
 
 import numpy as np
+from scipy.optimize import minimize
+
+
+def kernel_rbf(A, B, gamma):
+    """K(a, b) = exp(-gamma * ||a - b||^2) untuk setiap pasangan baris A dan B."""
+    A = np.asarray(A, dtype=float)
+    B = np.asarray(B, dtype=float)
+    jarak2 = (A * A).sum(1)[:, None] + (B * B).sum(1)[None, :] - 2.0 * A @ B.T
+    return np.exp(-gamma * np.maximum(jarak2, 0.0))
 
 
 class SVMManual:
-    def __init__(self, C=1.0, gamma="scale", tol=1e-3, eps=1e-3,
-                 max_iter=100_000, probability=True, n_folds_proba=5,
-                 random_state=42):
-        """
-        C            : parameter regularisasi (besar toleransi kesalahan klasifikasi)
-        gamma        : parameter kernel RBF. "scale" = 1 / (jumlah_fitur * varians X)
-        tol          : toleransi pemeriksaan syarat KKT pada SMO
-        eps          : batas perubahan alpha minimum pada SMO
-        max_iter     : batas jumlah perulangan SMO (pengaman)
-        probability  : True -> latih Platt scaling agar predict_proba tersedia
-        n_folds_proba: jumlah fold untuk menghitung nilai keputusan out-of-fold
-                       yang dipakai melatih sigmoid (agar probabilitas tidak terlalu yakin)
-        random_state : seed agar hasil selalu sama
-        """
-        self.C = float(C)
+    def __init__(self, C=1.0, gamma="scale", tol=1e-3, max_iter=100_000,
+                 probability=False, random_state=42):
+        self.C = C
         self.gamma = gamma
         self.tol = tol
-        self.eps = eps
         self.max_iter = max_iter
         self.probability = probability
-        self.n_folds_proba = n_folds_proba
         self.random_state = random_state
 
-    # ------------------------------------------------------------------ kernel
-    def _rbf(self, A, B):
-        """Kernel RBF: K(a, b) = exp(-gamma * ||a - b||^2), dihitung sekaligus untuk semua pasangan."""
-        sq = (A ** 2).sum(1)[:, None] + (B ** 2).sum(1)[None, :] - 2.0 * A @ B.T
-        return np.exp(-self.gamma_ * np.maximum(sq, 0.0))
-
-    # ------------------------------------------------------------------ SMO
-    def _smo(self, K, y):
-        """
-        Menyelesaikan optimasi soft margin (bentuk dual) dengan SMO.
-        Memakai konvensi Platt: u_i = sum_j alpha_j y_j K_ij - b, error E_i = u_i - y_i.
-        Mengembalikan (alpha, b).
-        """
-        n = len(y)
-        C, tol, eps = self.C, self.tol, self.eps
-        alpha = np.zeros(n)
-        b = 0.0
-        E = -y.astype(float)                 # karena awalnya semua alpha = 0 -> u = 0
-        rng = np.random.default_rng(self.random_state)
-
-        def take_step(i1, i2):
-            nonlocal b
-            if i1 == i2:
-                return 0
-            a1, a2 = alpha[i1], alpha[i2]
-            y1, y2 = y[i1], y[i2]
-            E1, E2 = E[i1], E[i2]
-            s = y1 * y2
-            # batas bawah (L) dan atas (H) untuk alpha2 baru
-            if y1 != y2:
-                L, H = max(0.0, a2 - a1), min(C, C + a2 - a1)
-            else:
-                L, H = max(0.0, a2 + a1 - C), min(C, a2 + a1)
-            if L >= H:
-                return 0
-            k11, k12, k22 = K[i1, i1], K[i1, i2], K[i2, i2]
-            eta = k11 + k22 - 2.0 * k12
-            if eta > 1e-12:
-                a2n = np.clip(a2 + y2 * (E1 - E2) / eta, L, H)
-            else:
-                # kasus jarang (data kembar): bandingkan nilai fungsi objektif di L dan H
-                f1 = y1 * (E1 + b) - a1 * k11 - s * a2 * k12
-                f2 = y2 * (E2 + b) - s * a1 * k12 - a2 * k22
-                L1, H1 = a1 + s * (a2 - L), a1 + s * (a2 - H)
-                Lobj = L1 * f1 + L * f2 + 0.5 * L1 ** 2 * k11 + 0.5 * L ** 2 * k22 + s * L * L1 * k12
-                Hobj = H1 * f1 + H * f2 + 0.5 * H1 ** 2 * k11 + 0.5 * H ** 2 * k22 + s * H * H1 * k12
-                if Lobj < Hobj - eps:
-                    a2n = L
-                elif Lobj > Hobj + eps:
-                    a2n = H
-                else:
-                    a2n = a2
-            if abs(a2n - a2) < eps * (a2n + a2 + eps):
-                return 0
-            a1n = a1 + s * (a2 - a2n)
-            # perbarui bias b
-            b1 = E1 + y1 * (a1n - a1) * k11 + y2 * (a2n - a2) * k12 + b
-            b2 = E2 + y1 * (a1n - a1) * k12 + y2 * (a2n - a2) * k22 + b
-            if 0 < a1n < C:
-                bn = b1
-            elif 0 < a2n < C:
-                bn = b2
-            else:
-                bn = 0.5 * (b1 + b2)
-            # perbarui cache error semua data sekaligus
-            E[:] += y1 * (a1n - a1) * K[i1] + y2 * (a2n - a2) * K[i2] + b - bn
-            alpha[i1], alpha[i2], b = a1n, a2n, bn
-            return 1
-
-        def examine(i2):
-            y2, a2, E2 = y[i2], alpha[i2], E[i2]
-            r2 = E2 * y2
-            # hanya proses data yang melanggar syarat KKT
-            if (r2 < -tol and a2 < C) or (r2 > tol and a2 > 0):
-                non_bound = np.where((alpha > 0) & (alpha < C))[0]
-                # heuristik 1: pilih pasangan dengan |E1 - E2| terbesar
-                if len(non_bound) > 1:
-                    i1 = non_bound[np.argmax(np.abs(E[non_bound] - E2))]
-                    if take_step(i1, i2):
-                        return 1
-                # heuristik 2: coba semua data non-bound mulai dari posisi acak
-                for i1 in np.roll(non_bound, rng.integers(max(len(non_bound), 1))):
-                    if take_step(i1, i2):
-                        return 1
-                # heuristik 3: coba semua data mulai dari posisi acak
-                for i1 in np.roll(np.arange(n), rng.integers(n)):
-                    if take_step(i1, i2):
-                        return 1
-            return 0
-
-        num_changed, examine_all, it = 0, True, 0
-        while (num_changed > 0 or examine_all) and it < self.max_iter:
-            num_changed = 0
-            idx = range(n) if examine_all else np.where((alpha > 0) & (alpha < C))[0]
-            for i in idx:
-                num_changed += examine(i)
-            if examine_all:
-                examine_all = False
-            elif num_changed == 0:
-                examine_all = True
-            it += 1
-        self.n_iter_ = it
-        return alpha, b
-
-    # ------------------------------------------------------------------ inti
-    def _fit_core(self, X, y_pm):
-        """Melatih SVM (tanpa probabilitas). y_pm berisi -1/+1."""
-        K = self._rbf(X, X)
-        alpha, b = self._smo(K, y_pm)
-        sv = alpha > 1e-8
-        return X[sv], y_pm[sv], alpha[sv], -b      # intercept = -b (konvensi Platt)
-
-    @staticmethod
-    def _decision(Kxs, sv_y, sv_alpha, intercept):
-        return Kxs @ (sv_alpha * sv_y) + intercept
-
-    def fit(self, X, y):
+    # ------------------------------------------------------------------ training
+    def fit(self, X, y01):
         X = np.asarray(X, dtype=float)
-        y = np.asarray(y).astype(int)
-        # langkah 1: label 0/1 -> -1/+1
-        y_pm = np.where(y == 1, 1, -1)
-        # langkah 2: tentukan gamma
-        if self.gamma == "scale":
-            self.gamma_ = 1.0 / (X.shape[1] * X.var())
-        else:
-            self.gamma_ = float(self.gamma)
-        # langkah 3-5: kernel, optimasi SMO, simpan support vector
-        self.sv_X_, self.sv_y_, self.sv_alpha_, self.intercept_ = self._fit_core(X, y_pm)
-        self.n_support_ = len(self.sv_alpha_)
-        self.n_features_in_ = X.shape[1]
-        # langkah 6: Platt scaling (probabilitas)
+        y = np.where(np.asarray(y01) == 1, 1.0, -1.0)          # langkah 2
+
+        self.gamma_ = (1.0 / (X.shape[1] * X.var())) if self.gamma == "scale" else float(self.gamma)
+        K = kernel_rbf(X, X, self.gamma_)                         # langkah 6
+        alpha, b, self.n_iter_ = self._smo(K, y)                  # langkah 7
+
+        sv = alpha > 1e-8                                          # langkah 8
+        self.support_ = np.nonzero(sv)[0]
+        self.support_vectors_ = X[sv]
+        self.dual_coef_ = alpha[sv] * y[sv]                        # bobot a_i * y_i
+        self.intercept_ = b
+        self.n_support_ = int(sv.sum())
+        self.n_features_ = X.shape[1]
+
         if self.probability:
-            f_oof = self._decision_out_of_fold(X, y_pm)
-            self.prob_A_, self.prob_B_ = self._fit_sigmoid(f_oof, y)
+            self._fit_platt(X, np.asarray(y01))
         return self
 
+    def _smo(self, K, y):
+        """
+        SMO dengan pemilihan pasangan pelanggar maksimum (maximal violating pair).
+        G adalah gradien fungsi tujuan dual; iterasi berhenti saat syarat optimal (KKT)
+        terpenuhi dengan toleransi tol.
+        """
+        n = len(y)
+        C = self.C
+        Q = (y[:, None] * y[None, :]) * K
+        alpha = np.zeros(n)
+        G = -np.ones(n)
+        it = 0
+        while it < self.max_iter:
+            yG = -y * G
+            up = ((y > 0) & (alpha < C)) | ((y < 0) & (alpha > 0))
+            low = ((y > 0) & (alpha > 0)) | ((y < 0) & (alpha < C))
+            if not up.any() or not low.any():
+                break
+            i = np.flatnonzero(up)[np.argmax(yG[up])]
+            j = np.flatnonzero(low)[np.argmin(yG[low])]
+            if yG[i] - yG[j] < self.tol:
+                break
+
+            ai_lama, aj_lama = alpha[i], alpha[j]
+            if y[i] != y[j]:
+                quad = max(Q[i, i] + Q[j, j] + 2.0 * Q[i, j], 1e-12)
+                delta = (-G[i] - G[j]) / quad
+                diff = alpha[i] - alpha[j]
+                alpha[i] += delta
+                alpha[j] += delta
+                if diff > 0:
+                    if alpha[j] < 0:
+                        alpha[j], alpha[i] = 0.0, diff
+                elif alpha[i] < 0:
+                    alpha[i], alpha[j] = 0.0, -diff
+                if diff > 0:
+                    if alpha[i] > C:
+                        alpha[i], alpha[j] = C, C - diff
+                elif alpha[j] > C:
+                    alpha[j], alpha[i] = C, C + diff
+            else:
+                quad = max(Q[i, i] + Q[j, j] - 2.0 * Q[i, j], 1e-12)
+                delta = (G[i] - G[j]) / quad
+                total = alpha[i] + alpha[j]
+                alpha[i] -= delta
+                alpha[j] += delta
+                if total > C:
+                    if alpha[i] > C:
+                        alpha[i], alpha[j] = C, total - C
+                elif alpha[j] < 0:
+                    alpha[j], alpha[i] = 0.0, total
+                if total > C:
+                    if alpha[j] > C:
+                        alpha[j], alpha[i] = C, total - C
+                elif alpha[i] < 0:
+                    alpha[i], alpha[j] = 0.0, total
+
+            G += Q[:, i] * (alpha[i] - ai_lama) + Q[:, j] * (alpha[j] - aj_lama)
+            it += 1
+
+        # Bias b dari support vector bebas (0 < a < C)
+        yG = -y * G
+        bebas = (alpha > 1e-8) & (alpha < C - 1e-8)
+        if bebas.any():
+            b = float(yG[bebas].mean())
+        else:
+            up = ((y > 0) & (alpha < C)) | ((y < 0) & (alpha > 0))
+            low = ((y > 0) & (alpha > 0)) | ((y < 0) & (alpha < C))
+            b = float((yG[up].max() + yG[low].min()) / 2.0)
+        return alpha, b, it
+
+    # ------------------------------------------------------------------ testing
     def decision_function(self, X):
-        """Nilai fungsi keputusan p(x). Positif -> Malignant, negatif -> Benign."""
-        X = np.asarray(X, dtype=float)
-        return self._decision(self._rbf(X, self.sv_X_), self.sv_y_, self.sv_alpha_, self.intercept_)
+        """p(x) = sum_i (a_i y_i) K(x_i, x) + b."""
+        Kx = kernel_rbf(X, self.support_vectors_, self.gamma_)
+        return Kx @ self.dual_coef_ + self.intercept_
 
     def predict(self, X):
-        """Kelas = sign[p(x)]: 1 = Malignant, 0 = Benign."""
-        return (self.decision_function(X) >= 0).astype(int)
+        """p(x) > 0 -> Malignant (1), selain itu Benign (0)."""
+        return (self.decision_function(X) > 0).astype(int)
+
+    # -------------------------------------------------------- probabilitas (Platt)
+    def _fit_platt(self, X, y01, n_fold=5):
+        """
+        Parameter A dan B sigmoid diestimasi dari nilai p(x) out-of-fold
+        (5-fold stratified pada data latih) agar probabilitas tidak terlalu yakin.
+        """
+        from preprocessing.data import stratified_kfold
+
+        f = np.zeros(len(y01))
+        for _, _, tr, va in stratified_kfold(y01, n_fold, 1, self.random_state):
+            m = SVMManual(C=self.C, gamma=self.gamma_, tol=self.tol, max_iter=self.max_iter)
+            m.fit(X[tr], y01[tr])
+            f[va] = m.decision_function(X[va])
+
+        n_pos, n_neg = int(y01.sum()), int(len(y01) - y01.sum())
+        # Target Platt (dengan koreksi prior)
+        t = np.where(y01 == 1, (n_pos + 1.0) / (n_pos + 2.0), 1.0 / (n_neg + 2.0))
+
+        def nll(p):
+            z = p[0] * f + p[1]
+            return np.sum(t * np.logaddexp(0, z) + (1 - t) * np.logaddexp(0, -z))
+
+        hasil = minimize(nll, x0=np.array([0.0, np.log((n_neg + 1.0) / (n_pos + 1.0))]), method="BFGS")
+        self.prob_a_, self.prob_b_ = float(hasil.x[0]), float(hasil.x[1])
 
     def predict_proba(self, X):
-        """Probabilitas malignant (0-1) hasil Platt scaling: P = 1 / (1 + exp(A*p(x) + B))."""
-        if not self.probability:
-            raise ValueError("Model dilatih dengan probability=False.")
-        f = self.decision_function(X)
-        z = self.prob_A_ * f + self.prob_B_
-        return np.where(z >= 0, np.exp(-z) / (1.0 + np.exp(-z)), 1.0 / (1.0 + np.exp(z)))
-
-    # ------------------------------------------------------------------ Platt scaling
-    def _decision_out_of_fold(self, X, y_pm):
-        """Nilai keputusan tiap data latih dihitung oleh model yang TIDAK melihat data itu (stratified k-fold)."""
-        rng = np.random.default_rng(self.random_state)
-        fold = np.empty(len(y_pm), dtype=int)
-        for kelas in (-1, 1):
-            idx = np.where(y_pm == kelas)[0]
-            rng.shuffle(idx)
-            fold[idx] = np.arange(len(idx)) % self.n_folds_proba
-        f = np.zeros(len(y_pm))
-        for k in range(self.n_folds_proba):
-            tr, te = fold != k, fold == k
-            sv_X, sv_y, sv_a, ic = self._fit_core(X[tr], y_pm[tr])
-            f[te] = self._decision(self._rbf(X[te], sv_X), sv_y, sv_a, ic)
-        return f
-
-    @staticmethod
-    def _fit_sigmoid(f, y, max_iter=100):
-        """Mencari A dan B pada sigmoid Platt dengan metode Newton (Lin, Lin & Weng, 2007)."""
-        prior1, prior0 = int((y == 1).sum()), int((y == 0).sum())
-        t = np.where(y == 1, (prior1 + 1.0) / (prior1 + 2.0), 1.0 / (prior0 + 2.0))
-        A, B = 0.0, np.log((prior0 + 1.0) / (prior1 + 1.0))
-        sigma, min_step = 1e-12, 1e-10
-
-        def objective(A, B):
-            z = f * A + B
-            return np.sum(np.where(z >= 0, t * z + np.log1p(np.exp(-z)), (t - 1) * z + np.log1p(np.exp(z))))
-
-        fval = objective(A, B)
-        for _ in range(max_iter):
-            z = f * A + B
-            p = np.where(z >= 0, np.exp(-z) / (1 + np.exp(-z)), 1 / (1 + np.exp(z)))
-            q = 1 - p
-            d2 = p * q
-            h11, h22, h21 = sigma + np.sum(f * f * d2), sigma + np.sum(d2), np.sum(f * d2)
-            d1 = t - p
-            g1, g2 = np.sum(f * d1), np.sum(d1)
-            if abs(g1) < 1e-5 and abs(g2) < 1e-5:
-                break
-            det = h11 * h22 - h21 * h21
-            dA, dB = -(h22 * g1 - h21 * g2) / det, -(-h21 * g1 + h11 * g2) / det
-            gd = g1 * dA + g2 * dB
-            step = 1.0
-            while step >= min_step:
-                nA, nB = A + step * dA, B + step * dB
-                nf = objective(nA, nB)
-                if nf < fval + 1e-4 * step * gd:
-                    A, B, fval = nA, nB, nf
-                    break
-                step /= 2.0
-            if step < min_step:
-                break
-        return A, B
+        if not hasattr(self, "prob_a_"):
+            raise RuntimeError("Model dilatih tanpa probability=True.")
+        z = self.prob_a_ * self.decision_function(X) + self.prob_b_
+        p1 = 1.0 / (1.0 + np.exp(np.clip(z, -500, 500)))
+        return np.column_stack([1.0 - p1, p1])
