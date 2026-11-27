@@ -1,0 +1,5 @@
+Penelitian,Metode dan Validasi,Hasil Terbaik,Fitur Paling Berpengaruh
+Raha dkk. (2024),"RF, XGBoost, GB, SVM, MLP; grid search; hold-out 67 : 33","RF, accuracy 99,46%","worst perimeter, worst area, worst concave points, worst radius, mean concave points (SHAP pada RF)"
+Zhou dkk. (2024),7 algoritma; 8 fitur hasil seleksi; hold-out 80 : 20,"AdaBoost-Logistic, accuracy 99,12%; RF dan SVM 97,37%","8 fitur dengan korelasi > 0,7 terhadap diagnosis"
+Strelcenia dan Prakoonwit (2023),6 algoritma dengan feature engineering,"Decision Tree, accuracy 98,64%",Tidak menggunakan XAI
+Penelitian ini,RF dan SVM; 30 fitur; Stratified 10-Fold × 5 (50 pengujian),"SVM, accuracy 97,64% ± 1,97%, recall 96,13% (RF 96,06%)","RF: concave_points_worst, concave_points_mean, radius_worst; SVM (SHAP): texture_worst, concave_points_worst, radius_worst"

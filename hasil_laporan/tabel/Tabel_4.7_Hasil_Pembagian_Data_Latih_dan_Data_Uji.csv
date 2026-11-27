@@ -1,0 +1,4 @@
+Bagian,Benign,Malignant,Total,Persentase Malignant
+Data latih,285,170,455,"37,4%"
+Data uji,72,42,114,"36,8%"
+Total,357,212,569,"37,3%"

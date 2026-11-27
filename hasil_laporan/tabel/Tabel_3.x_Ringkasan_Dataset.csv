@@ -1,0 +1,9 @@
+Keterangan,Nilai
+Nama dataset,Breast Cancer Wisconsin (Diagnostic)
+Sumber,UCI Machine Learning Repository (doi:10.24432/C5DW2B)
+Jumlah data,569 pasien
+Jumlah kolom,32 kolom
+Kolom identitas,id
+Kolom target,"diagnosis: M = malignant (212), B = benign (357)"
+Jumlah fitur,30 fitur (10 karakteristik × 3 variasi)
+Jenis fitur,"Numerik kontinu, hasil pengukuran citra FNA"

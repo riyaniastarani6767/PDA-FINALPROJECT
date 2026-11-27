@@ -1,0 +1,9 @@
+Hasil Pelatihan,Nilai
+Nilai γ (scale),"0,03333"
+Jumlah support vector,101 dari 455 data latih
+Support vector kelas Benign,49
+Support vector kelas Malignant,52
+Bias b,"0,2646"
+Jumlah iterasi SMO,272
+Parameter sigmoid Platt (A; B),"-3,6996; -0,3165"
+Waktu pelatihan,"0,05 detik"

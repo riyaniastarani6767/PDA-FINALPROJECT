@@ -1,0 +1,11 @@
+No,Karakteristik,Keterangan,Nama Fitur
+1,Radius,Rata-rata jarak dari pusat ke titik-titik keliling inti sel,"radius_mean, radius_se, radius_worst"
+2,Texture,Standar deviasi nilai skala abu-abu (gray-scale),"texture_mean, texture_se, texture_worst"
+3,Perimeter,Keliling inti sel,"perimeter_mean, perimeter_se, perimeter_worst"
+4,Area,Luas inti sel,"area_mean, area_se, area_worst"
+5,Smoothness,Variasi lokal panjang radius,"smoothness_mean, smoothness_se, smoothness_worst"
+6,Compactness,"Kepadatan bentuk, perimeter² / area − 1,0","compactness_mean, compactness_se, compactness_worst"
+7,Concavity,Tingkat kedalaman bagian cekung pada kontur,"concavity_mean, concavity_se, concavity_worst"
+8,Concave points,Jumlah bagian cekung pada kontur,"concave_points_mean, concave_points_se, concave_points_worst"
+9,Symmetry,Kesimetrisan inti sel,"symmetry_mean, symmetry_se, symmetry_worst"
+10,Fractal dimension,Kerumitan kontur (coastline approximation − 1),"fractal_dimension_mean, fractal_dimension_se, fractal_dimension_worst"
