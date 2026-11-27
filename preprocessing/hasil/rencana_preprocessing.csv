@@ -1,0 +1,9 @@
+langkah,temuan,tindakan,alasan
+Penanganan duplikat,0 baris duplikat,Tidak ada yang dihapus,Data ganda membuat model belajar dari pola yang sama dua kali dan dapat bocor ke data uji.
+Penanganan missing value,0 nilai kosong,Tidak perlu imputasi,Model tidak dapat memproses nilai kosong; median dipilih karena tahan terhadap outlier.
+Penanganan outlier,171 pasien memiliki outlier (IQR); 77.1% nilai outlier berasal dari malignant,Outlier dipertahankan (tidak dihapus),"Nilai ekstrem didominasi kelas malignant, yaitu ciri inti sel ganas yang lebih besar dan tidak beraturan; menghapusnya membuang informasi diagnostik. Pengaruh skala ditangani z-score."
+Penghapusan kolom ID,Kolom id hanya nomor identitas pasien,Hapus kolom id,Tidak menyimpan informasi diagnostik sehingga tidak boleh dipelajari model.
+Transformasi label,"Label berupa huruf B, M","Malignant = 1, Benign = 0",Model membutuhkan label numerik; malignant ditetapkan sebagai kelas positif.
+Seleksi fitur,"21 pasangan fitur berkorelasi > 0.9 (misalnya radius, perimeter, area)",Seluruh 30 fitur tetap digunakan,"Random Forest memilih fitur secara acak di setiap node, SVM RBF memakai semua fitur dalam perhitungan jarak, dan SHAP perlu menilai kontribusi setiap fitur (Rumusan Masalah 2)."
+Pembagian data,"Kelas tidak seimbang: 62.7% benign, 37.3% malignant (rasio 1.68 : 1)",Hold-out 80 : 20 secara stratified,Menjaga proporsi kelas tetap sama pada data latih dan data uji.
+Standardisasi fitur,"Skala berbeda jauh: area_worst sampai 4254.0, fractal_dimension_se maksimum 0.0298",z-score dengan mu dan sigma dari data latih,Kernel RBF berbasis jarak sehingga fitur berskala besar akan mendominasi (Subbab 2.1.8.1).

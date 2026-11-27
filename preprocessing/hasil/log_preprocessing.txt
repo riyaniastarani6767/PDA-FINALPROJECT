@@ -1,0 +1,7 @@
+- Duplikat: tidak ada, tidak ada baris yang dihapus
+- Outlier: 171 pasien memiliki outlier, dipertahankan
+- Kolom id dihapus; label diubah: Malignant = 1, Benign = 0
+- Seleksi fitur: tidak dilakukan, 30 fitur digunakan
+- Split stratified: 455 latih (37.4% malignant), 114 uji (36.8% malignant)
+- Missing value: tidak ada, tidak perlu imputasi
+- Standardisasi z-score: mu dan sigma dihitung dari data latih

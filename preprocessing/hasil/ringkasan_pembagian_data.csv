@@ -1,0 +1,4 @@
+bagian,jumlah,malignant,benign,persen_malignant
+Data latih,455,170,285,37.4
+Data uji,114,42,72,36.8
+Total,569,212,357,37.3
