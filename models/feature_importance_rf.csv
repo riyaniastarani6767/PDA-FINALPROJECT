@@ -1,0 +1,31 @@
+peringkat,fitur,nama,importance
+1,concave_points_worst,Concave points (worst),0.13371543608146438
+2,concave_points_mean,Concave points (mean),0.1333074531355036
+3,radius_worst,Radius (worst),0.11332520042591263
+4,perimeter_worst,Perimeter (worst),0.10903081064230248
+5,area_worst,Area (worst),0.08814713986580663
+6,perimeter_mean,Perimeter (mean),0.051121985148719615
+7,concavity_mean,Concavity (mean),0.04629704612571243
+8,concavity_worst,Concavity (worst),0.04491381047652826
+9,area_mean,Area (mean),0.0387822643428103
+10,radius_mean,Radius (mean),0.035693594549569024
+11,area_se,Area (SE),0.02901087705283542
+12,texture_worst,Texture (worst),0.021516973817196878
+13,smoothness_worst,Smoothness (worst),0.020858058879629406
+14,texture_mean,Texture (mean),0.0193923508515879
+15,compactness_worst,Compactness (worst),0.015434693155768002
+16,symmetry_worst,Symmetry (worst),0.012452891284756995
+17,fractal_dimension_worst,Fractal dimension (worst),0.009786074582143273
+18,radius_se,Radius (SE),0.009687440735962316
+19,compactness_mean,Compactness (mean),0.009567511395970642
+20,smoothness_mean,Smoothness (mean),0.007594010303722784
+21,concave_points_se,Concave points (SE),0.006431532317798793
+22,perimeter_se,Perimeter (SE),0.005898536959955293
+23,compactness_se,Compactness (SE),0.0058236465953533855
+24,texture_se,Texture (SE),0.005749765315257293
+25,symmetry_se,Symmetry (SE),0.0056432973568247636
+26,fractal_dimension_mean,Fractal dimension (mean),0.004962371437078417
+27,smoothness_se,Smoothness (SE),0.004172702264153675
+28,concavity_se,Concavity (SE),0.004142806538671721
+29,symmetry_mean,Symmetry (mean),0.0040545960188671125
+30,fractal_dimension_se,Fractal dimension (SE),0.003485122342136574

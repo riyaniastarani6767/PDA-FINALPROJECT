@@ -1,0 +1,76 @@
+{
+  "manifest_version": "1.0",
+  "training_artifact_version": null,
+  "artifact_checksums": {
+    "model_rf.pkl": "sha256:b414f5921fb66c607e99cc8e94b98bbd81137d9ecf17921390c3fbe0b44251eb",
+    "model_svm.pkl": "sha256:b1accb5c174df1ff0a289b32dfb842a4c171d4f0b0fb621332d89ff7edb62370",
+    "hasil_preprocessing.json": "sha256:fb87081b560c5ea4a80c502d2326402974a77b021101ba9f7629b2b93c520d66",
+    "hasil_evaluasi.json": "sha256:9e5147190c36ec3fbadf24d1f62c6a34edd2b38ffb7874f7811de1ce9cf9d645"
+  },
+  "feature_names": [
+    "radius_mean",
+    "texture_mean",
+    "perimeter_mean",
+    "area_mean",
+    "smoothness_mean",
+    "compactness_mean",
+    "concavity_mean",
+    "concave_points_mean",
+    "symmetry_mean",
+    "fractal_dimension_mean",
+    "radius_se",
+    "texture_se",
+    "perimeter_se",
+    "area_se",
+    "smoothness_se",
+    "compactness_se",
+    "concavity_se",
+    "concave_points_se",
+    "symmetry_se",
+    "fractal_dimension_se",
+    "radius_worst",
+    "texture_worst",
+    "perimeter_worst",
+    "area_worst",
+    "smoothness_worst",
+    "compactness_worst",
+    "concavity_worst",
+    "concave_points_worst",
+    "symmetry_worst",
+    "fractal_dimension_worst"
+  ],
+  "feature_count": 30,
+  "target_mapping": {
+    "B": 0,
+    "M": 1
+  },
+  "positive_class": "Malignant",
+  "missing_value_policy": "reject",
+  "negative_value_policy": "reject",
+  "preprocessing_order": [
+    "validate_feature_names",
+    "validate_feature_count",
+    "validate_numeric_values",
+    "reject_missing_values",
+    "reject_negative_values",
+    "reorder_canonical_features",
+    "transform_with_training_scaler"
+  ],
+  "scaler_type": "StandardScalerManual",
+  "scaler_artifact_reference": {
+    "model_rf.pkl": "scaler",
+    "model_svm.pkl": "scaler"
+  },
+  "model_artifacts": {
+    "random_forest": "models/model_rf.pkl",
+    "svm_rbf": "models/model_svm.pkl"
+  },
+  "training_preprocessing_reference": {
+    "module": "preprocessing.data",
+    "function": "siapkan_data",
+    "training_sequence": "impute_training_median_then_fit_scaler_on_training_data",
+    "transformation_sequence": "impute_then_scale",
+    "inference_missing_value_policy": "reject",
+    "preprocessing_log_artifact": "models/hasil_preprocessing.json"
+  }
+}
