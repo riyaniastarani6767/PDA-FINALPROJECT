@@ -5,11 +5,14 @@ import streamlit as st
 
 from components.empty_state import tampilkan_empty_state
 from components.prediction import tampilkan_area_hasil
+from interpretasi_shap import shap_svm
+from interpretasi_shap.tab_shap import tampilkan_shap_lokal
 from preprocessing.data import FITUR, label_fitur, validasi_csv, validasi_satu_pasien
 from utils.backend_adapter import (
     BackendStatus,
     cek_status_model,
     prediksi_pasien,
+    preprocess_single,
     predict_batch,
     simpan_batch_prediksi_terverifikasi,
     simpan_prediksi_terverifikasi,
@@ -28,6 +31,16 @@ if CSS_PATH.exists():
 @st.cache_data(show_spinner=False)
 def muat_data_prediksi():
     return muat_dataset_ui()
+
+
+@st.cache_resource(show_spinner=False)
+def muat_explainer_shap():
+    """KernelExplainer SVM dari artefak training (model_svm.pkl + shap_background.pkl), tanpa training ulang."""
+    import joblib
+
+    payload = joblib.load(ROOT / "models" / "model_svm.pkl")
+    background = joblib.load(ROOT / "models" / "shap_background.pkl")
+    return shap_svm.buat_explainer(payload["model"], background)
 
 
 def label_kategori(nama: str) -> str:
@@ -208,6 +221,7 @@ else:
 st.markdown('<div class="section-heading">Hasil Prediksi</div>', unsafe_allow_html=True)
 
 respons_prediksi = None
+fitur_shap: dict | None = None
 if st.button(
     "Periksa dan jalankan prediksi",
     type="primary",
@@ -249,6 +263,7 @@ if st.button(
                 tampilkan_area_hasil(respons_prediksi)
 
                 if respons_prediksi.get("status") == "success":
+                    fitur_shap = {nama: float(nilai_input[nama]) for nama in FITUR}
                     token = respons_prediksi.get("provenance_token")
                     storage = jalankan_penyimpanan_sekali(
                         st.session_state,
@@ -299,19 +314,37 @@ with col_rf:
         )
 
 with col_svm:
-    path_shap = ROOT / "models" / "shap_global.pkl"
-    if path_shap.exists():
-        tampilkan_empty_state(
-            "SHAP lokal menunggu integrasi",
-            "Artefak SHAP tersedia, tetapi perhitungan baru akan dipanggil setelah backend diverifikasi.",
-            icon="🔬",
-        )
-    else:
+    st.markdown("**SHAP Lokal — Support Vector Machine**")
+    path_bg = ROOT / "models" / "shap_background.pkl"
+    if not path_bg.exists():
         tampilkan_empty_state(
             "SHAP lokal belum tersedia",
-            "Artefak shap_global.pkl belum tersedia dan SHAP tidak dihitung ulang.",
+            "Artefak shap_background.pkl belum tersedia. Jalankan train.py terlebih dahulu.",
             icon="🔬",
         )
+    elif nama_model != "Support Vector Machine":
+        st.info("SHAP lokal dihitung untuk model SVM. Pilih model **Support Vector Machine** lalu jalankan prediksi.")
+    elif metode_input == "Upload CSV":
+        st.info("SHAP lokal ditampilkan untuk satu pasien (Input Manual atau Pilih Sampel Dataset).")
+    elif fitur_shap is None:
+        st.info("Jalankan prediksi satu pasien untuk melihat kontribusi setiap fitur terhadap hasil prediksi.")
+    else:
+        st.caption("Penjelasan SHAP untuk pasien yang baru diprediksi ditampilkan di bawah.")
+
+if fitur_shap is not None and nama_model == "Support Vector Machine" and (ROOT / "models" / "shap_background.pkl").exists():
+    st.markdown('<div class="section-heading">SHAP Lokal — Penjelasan Prediksi Pasien Ini</div>', unsafe_allow_html=True)
+    try:
+        with st.spinner("Menghitung nilai SHAP untuk pasien ini..."):
+            explainer = muat_explainer_shap()
+            x_scaled = preprocess_single("Support Vector Machine", fitur_shap)
+            hasil_lokal = shap_svm.jelaskan_lokal(explainer, x_scaled)
+        st.markdown(
+            "Grafik menunjukkan fitur yang paling memengaruhi prediksi SVM untuk pasien ini. "
+            "Batang **oranye** (SHAP positif) mendorong ke **Malignant**, batang **hijau** (SHAP negatif) mendorong ke **Benign**."
+        )
+        tampilkan_shap_lokal(hasil_lokal, [fitur_shap[nama] for nama in FITUR], top=10, kunci="prediksi")
+    except Exception as exc:
+        st.warning(f"Prediksi berhasil, tetapi SHAP lokal gagal dihitung: {exc}")
 
 st.markdown('<div class="disclaimer">', unsafe_allow_html=True)
 st.markdown(
