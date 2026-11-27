@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from preprocessing.data import FITUR, KARAKTERISTIK, label_fitur, validasi_csv
+from preprocessing.data import FITUR, KARAKTERISTIK, label_fitur, validasi_csv, validasi_satu_pasien
 from tampilan import grafik, sumber
 from tampilan.gaya import catatan, e, kaki, kartu_angka, kartu_hasil, kepala, langkah
 from utils.backend_adapter import (
@@ -24,6 +24,7 @@ from utils.backend_adapter import (
     simpan_batch_prediksi_terverifikasi,
     simpan_prediksi_terverifikasi,
 )
+from basis_data.database import id_pasien_dari_prediksi
 from utils.ui_storage import jalankan_penyimpanan_sekali
 
 PILIHAN_MODEL = {
@@ -152,7 +153,6 @@ elif metode == METODE[1]:
                 with kolom[i % 2]:
                     nilai_manual[f] = st.number_input(
                         f"{sumber.ARTI_KARAKTERISTIK[k][0]} — {label_fitur(f)}",
-                        min_value=0.0,
                         value=None,
                         step=float(10 ** np.floor(np.log10(max(r["median"], 1e-6))) / 10),
                         format="%.5f",
@@ -165,6 +165,9 @@ elif metode == METODE[1]:
         kosong = [label_fitur(f) for f, v in nilai_manual.items() if v is None]
         st.warning(f"Baru {terisi} dari 30 fitur terisi. Belum diisi: {', '.join(kosong[:6])}"
                    f"{' …' if len(kosong) > 6 else ''}. Periksa ketiga tab (Mean, SE, Worst).")
+    elif validasi_satu_pasien(nilai_manual):
+        for pesan in validasi_satu_pasien(nilai_manual):
+            st.error(pesan + " Perbaiki nilai tersebut sebelum menjalankan prediksi.")
     else:
         st.success("Ke-30 fitur sudah terisi. Lanjutkan ke langkah 3.")
         input_tunggal = {f: float(v) for f, v in nilai_manual.items()}
@@ -242,21 +245,34 @@ if jalan:
         if batch_df is not None:
             respons = {m: predict_batch(batch_df, m, "csv") for m in model_dipakai}
             tersimpan = {}
+            # satu data pasien (baris CSV) dipakai bersama oleh kedua model -> sesuai ERD (relasi Diprediksi M : N)
+            pasien_baris: list | None = None
             for m, r in respons.items():
                 if r["status"] in ("success", "partial_success"):
                     tersimpan[m] = jalankan_penyimpanan_sekali(
                         st.session_state, f"batch:{r.get('provenance_token')}",
-                        lambda r=r: simpan_batch_prediksi_terverifikasi(r, batch_df))
+                        lambda r=r, pb=pasien_baris: simpan_batch_prediksi_terverifikasi(
+                            r, batch_df, label_asli=batch_info.get("label_asli"), id_pasien=pb))
+                    if pasien_baris is None and tersimpan[m].get("status") == "saved":
+                        posisi = [d["row_number"] for d in r["detail"] if d.get("status") == "success"]
+                        ids = id_pasien_dari_prediksi(tersimpan[m]["record_ids"])
+                        pasien_baris = [None] * len(batch_df)
+                        for pos, pid in zip(posisi, ids):
+                            pasien_baris[pos - 1] = pid
             st.session_state.hasil_prediksi = {"jenis": "batch", "kunci": kunci_input, "respons": respons,
                                                "data": batch_df, "info": batch_info, "simpan": tersimpan}
         else:
             respons = {m: prediksi_pasien(m, input_tunggal, metode_db) for m in model_dipakai}
             tersimpan = {}
+            id_pasien: int | None = None  # pasien yang sama diprediksi oleh RF dan SVM -> satu baris data_pasien
             for m, r in respons.items():
                 if r.get("status") == "success":
                     tersimpan[m] = jalankan_penyimpanan_sekali(
                         st.session_state, f"single:{r.get('provenance_token')}",
-                        lambda r=r: simpan_prediksi_terverifikasi(r, input_tunggal, metode_db, actual_label=label_asli))
+                        lambda r=r, ip=id_pasien: simpan_prediksi_terverifikasi(
+                            r, input_tunggal, metode_db, actual_label=label_asli, id_pasien=ip))
+                    if id_pasien is None and tersimpan[m].get("status") == "saved":
+                        id_pasien = id_pasien_dari_prediksi(tersimpan[m]["record_ids"][0])
             st.session_state.hasil_prediksi = {"jenis": "tunggal", "kunci": kunci_input, "respons": respons,
                                                "fitur": input_tunggal, "label_asli": label_asli, "simpan": tersimpan}
 
