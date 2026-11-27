@@ -1,0 +1,11 @@
+# Tema bawaan aplikasi (mode terang, palet hijau-kuning sesuai grafik laporan).
+# Mode gelap dapat diaktifkan dari sidebar (tampilan/gaya.py).
+[theme]
+base = "light"
+primaryColor = "#4A6F23"
+backgroundColor = "#F8FAF4"
+secondaryBackgroundColor = "#EEF3E6"
+textColor = "#1F2A1A"
+
+[server]
+maxUploadSize = 20

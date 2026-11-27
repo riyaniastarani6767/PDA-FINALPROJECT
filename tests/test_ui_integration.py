@@ -71,13 +71,13 @@ def test_trusted_batch_storage_uses_temporary_database(tmp_path):
 
 
 def test_prediction_page_starts_with_verified_backend():
-    app = AppTest.from_file(str(ROOT / "pages/02_Prediksi.py"), default_timeout=20)
+    app = AppTest.from_file(str(ROOT / "halaman/2_Prediksi.py"), default_timeout=20)
     app.run()
     assert not app.exception
     assert len(app.success) > 0 or len(app.info) > 0 or len(app.warning) > 0
 
 
 def test_history_page_starts():
-    app = AppTest.from_file(str(ROOT / "pages/03_Riwayat.py"), default_timeout=20)
+    app = AppTest.from_file(str(ROOT / "halaman/3_Riwayat_Prediksi.py"), default_timeout=20)
     app.run()
     assert not app.exception

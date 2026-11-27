@@ -1,0 +1,7 @@
+Aspek,Hasil
+Tujuan bisnis,Membantu tenaga medis membedakan tumor malignant dan benign beserta alasan prediksinya
+Pengguna sistem,Tenaga medis (dokter spesialis patologi anatomi dan petugas laboratorium patologi)
+Tujuan data mining,"Klasifikasi biner dengan Random Forest dan SVM, interpretasi feature importance dan SHAP"
+Kriteria keberhasilan model,Recall diprioritaskan agar False Negative sekecil mungkin; F1-score sebagai pembanding kedua
+Kriteria keberhasilan sistem,Seluruh skenario Blackbox Testing berjalan sesuai hasil yang diharapkan
+Keterkaitan rumusan masalah,RM 1 → 4.5.1–4.5.3; RM 2 → 4.5.4; RM 3 → 4.6

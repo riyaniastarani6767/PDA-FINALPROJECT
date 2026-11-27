@@ -1,0 +1,7 @@
+Langkah,Temuan EDA,Hasil Penerapan
+Penanganan duplikat,0 baris duplikat,Tidak ada yang dihapus
+Penanganan missing value,0 nilai kosong,Tidak perlu imputasi
+Penanganan outlier,171 pasien memiliki outlier (IQR); 77.1% nilai outlier berasal dari malignant,Outlier dipertahankan (tidak dihapus)
+Penghapusan kolom ID,Kolom id hanya nomor identitas pasien,Hapus kolom id
+Transformasi label,"Label berupa huruf B, M","Malignant = 1, Benign = 0"
+Seleksi fitur,"21 pasangan fitur berkorelasi > 0.9 (misalnya radius, perimeter, area)",Seluruh 30 fitur tetap digunakan

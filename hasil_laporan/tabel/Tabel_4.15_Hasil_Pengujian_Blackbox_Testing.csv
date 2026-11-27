@@ -1,0 +1,12 @@
+Kode,Kebutuhan yang Diuji,Hasil Pengujian,Status
+F-01,"Menampilkan informasi dataset, EDA, dan keputusan preprocessing",(diisi setelah pengujian),(Berhasil / Gagal)
+F-02,Menerima masukan 30 fitur untuk satu pasien,(diisi setelah pengujian),(Berhasil / Gagal)
+F-03,Mengisi masukan otomatis dari data pasien pada dataset,(diisi setelah pengujian),(Berhasil / Gagal)
+F-04,Menerima masukan banyak pasien melalui file CSV,(diisi setelah pengujian),(Berhasil / Gagal)
+F-05,Memvalidasi data masukan,(diisi setelah pengujian),(Berhasil / Gagal)
+F-06,Melakukan prediksi menggunakan Random Forest dan SVM,(diisi setelah pengujian),(Berhasil / Gagal)
+F-07,"Menampilkan label, probabilitas, dan unduh hasil CSV",(diisi setelah pengujian),(Berhasil / Gagal)
+F-08,Menampilkan penjelasan SHAP satu pasien,(diisi setelah pengujian),(Berhasil / Gagal)
+F-09,Menyimpan dan menampilkan riwayat prediksi,(diisi setelah pengujian),(Berhasil / Gagal)
+F-10,Menampilkan evaluasi model,(diisi setelah pengujian),(Berhasil / Gagal)
+F-11,Menampilkan SHAP global (summary plot),(diisi setelah pengujian),(Berhasil / Gagal)
