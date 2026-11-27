@@ -1,0 +1,92 @@
+{
+  "data": {
+    "jumlah_data": 569,
+    "jumlah_kolom": 32,
+    "jumlah_fitur": 30,
+    "fitur_numerik": 30,
+    "missing_value": 0,
+    "kolom_missing": {},
+    "duplikat": 0,
+    "id_duplikat": 0,
+    "nilai_negatif": 0,
+    "label_unik": [
+      "B",
+      "M"
+    ],
+    "benign": 357,
+    "malignant": 212,
+    "persen_benign": 62.7,
+    "persen_malignant": 37.3,
+    "rasio_mayoritas_minoritas": 1.68,
+    "tidak_seimbang": true
+  },
+  "pembagian": {
+    "latih": 455,
+    "uji": 114
+  },
+  "parameter": {
+    "Random Forest": {
+      "n_estimators": 100,
+      "max_depth": null,
+      "min_samples_split": 2,
+      "max_features": "sqrt",
+      "random_state": 42
+    },
+    "SVM RBF": {
+      "C": 1.0,
+      "gamma": "scale",
+      "gamma_nilai": 0.033333333333333326,
+      "jumlah_support_vector": 101
+    }
+  },
+  "holdout": {
+    "Random Forest": {
+      "accuracy": 0.9649122807017544,
+      "precision": 0.975,
+      "recall": 0.9285714285714286,
+      "f1_score": 0.951219512195122,
+      "TP": 39,
+      "TN": 71,
+      "FP": 1,
+      "FN": 3
+    },
+    "SVM RBF": {
+      "accuracy": 0.9824561403508771,
+      "precision": 0.9761904761904762,
+      "recall": 0.9761904761904762,
+      "f1_score": 0.9761904761904762,
+      "TP": 41,
+      "TN": 71,
+      "FP": 1,
+      "FN": 1
+    }
+  },
+  "kfold": [
+    {
+      "model": "Random Forest",
+      "accuracy_mean": 0.9606140350877194,
+      "accuracy_std": 0.03027757102322947,
+      "precision_mean": 0.9580557817468572,
+      "precision_std": 0.04661611600916634,
+      "recall_mean": 0.9367099567099566,
+      "recall_std": 0.055566748875923916,
+      "f1_score_mean": 0.9462179596854642,
+      "f1_score_std": 0.041686124538796804
+    },
+    {
+      "model": "SVM RBF",
+      "accuracy_mean": 0.9764285714285714,
+      "accuracy_std": 0.019659976097011648,
+      "precision_mean": 0.9757878787878788,
+      "precision_std": 0.03122684724620598,
+      "recall_mean": 0.9612987012987013,
+      "recall_std": 0.03395069236474006,
+      "f1_score_mean": 0.968103122628931,
+      "f1_score_std": 0.02632426633081786
+    }
+  ],
+  "model_terbaik": {
+    "model": "SVM RBF",
+    "alasan": "Recall rata-rata SVM RBF lebih tinggi (96.13% vs 93.67%)."
+  }
+}

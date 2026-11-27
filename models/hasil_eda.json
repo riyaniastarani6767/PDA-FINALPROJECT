@@ -1,0 +1,152 @@
+{
+  "kualitas": {
+    "jumlah_data": 569,
+    "jumlah_kolom": 32,
+    "jumlah_fitur": 30,
+    "fitur_numerik": 30,
+    "missing_value": 0,
+    "kolom_missing": {},
+    "duplikat": 0,
+    "id_duplikat": 0,
+    "nilai_negatif": 0,
+    "label_unik": [
+      "B",
+      "M"
+    ]
+  },
+  "distribusi_kelas": {
+    "benign": 357,
+    "malignant": 212,
+    "persen_benign": 62.7,
+    "persen_malignant": 37.3,
+    "rasio_mayoritas_minoritas": 1.68,
+    "tidak_seimbang": true
+  },
+  "skala": {
+    "fitur_nilai_terbesar": "area_worst",
+    "nilai_maks_terbesar": 4254.0,
+    "fitur_nilai_terkecil": "fractal_dimension_se",
+    "nilai_maks_terkecil": 0.0298,
+    "rasio_rentang": 140569.1,
+    "perlu_penskalaan": true
+  },
+  "outlier": {
+    "total_nilai_outlier": 608,
+    "total_nilai": 17070,
+    "pasien_dengan_outlier": 171,
+    "pasien_outlier_malignant": 114,
+    "pasien_outlier_benign": 57,
+    "persen_malignant_punya_outlier": 53.8,
+    "persen_benign_punya_outlier": 16.0,
+    "persen_nilai_outlier_dari_malignant": 77.1,
+    "di_atas_batas_atas": 605,
+    "di_bawah_batas_bawah": 3
+  },
+  "outlier_per_fitur": {
+    "area_se": {
+      "jumlah_outlier": 65.0,
+      "persen": 11.4,
+      "dari_malignant": 65.0,
+      "dari_benign": 0.0
+    },
+    "radius_se": {
+      "jumlah_outlier": 38.0,
+      "persen": 6.7,
+      "dari_malignant": 37.0,
+      "dari_benign": 1.0
+    },
+    "perimeter_se": {
+      "jumlah_outlier": 38.0,
+      "persen": 6.7,
+      "dari_malignant": 38.0,
+      "dari_benign": 0.0
+    },
+    "area_worst": {
+      "jumlah_outlier": 35.0,
+      "persen": 6.2,
+      "dari_malignant": 35.0,
+      "dari_benign": 0.0
+    },
+    "smoothness_se": {
+      "jumlah_outlier": 30.0,
+      "persen": 5.3,
+      "dari_malignant": 4.0,
+      "dari_benign": 26.0
+    },
+    "compactness_se": {
+      "jumlah_outlier": 28.0,
+      "persen": 4.9,
+      "dari_malignant": 14.0,
+      "dari_benign": 14.0
+    },
+    "fractal_dimension_se": {
+      "jumlah_outlier": 28.0,
+      "persen": 4.9,
+      "dari_malignant": 10.0,
+      "dari_benign": 18.0
+    },
+    "symmetry_se": {
+      "jumlah_outlier": 27.0,
+      "persen": 4.7,
+      "dari_malignant": 16.0,
+      "dari_benign": 11.0
+    },
+    "area_mean": {
+      "jumlah_outlier": 25.0,
+      "persen": 4.4,
+      "dari_malignant": 25.0,
+      "dari_benign": 0.0
+    },
+    "fractal_dimension_worst": {
+      "jumlah_outlier": 24.0,
+      "persen": 4.2,
+      "dari_malignant": 18.0,
+      "dari_benign": 6.0
+    }
+  },
+  "korelasi_target_teratas": {
+    "concave_points_worst": 0.794,
+    "perimeter_worst": 0.783,
+    "concave_points_mean": 0.777,
+    "radius_worst": 0.776,
+    "perimeter_mean": 0.743
+  },
+  "korelasi_target_terendah": {
+    "fractal_dimension_se": 0.078,
+    "symmetry_se": -0.007,
+    "texture_se": -0.008,
+    "fractal_dimension_mean": -0.013,
+    "smoothness_se": -0.067
+  },
+  "pasangan_korelasi_tinggi": {
+    "ambang": 0.9,
+    "jumlah": 21,
+    "contoh": [
+      {
+        "fitur_1": "radius_mean",
+        "fitur_2": "perimeter_mean",
+        "korelasi": 0.998
+      },
+      {
+        "fitur_1": "radius_worst",
+        "fitur_2": "perimeter_worst",
+        "korelasi": 0.994
+      },
+      {
+        "fitur_1": "radius_mean",
+        "fitur_2": "area_mean",
+        "korelasi": 0.987
+      },
+      {
+        "fitur_1": "perimeter_mean",
+        "fitur_2": "area_mean",
+        "korelasi": 0.987
+      },
+      {
+        "fitur_1": "radius_worst",
+        "fitur_2": "area_worst",
+        "korelasi": 0.984
+      }
+    ]
+  }
+}

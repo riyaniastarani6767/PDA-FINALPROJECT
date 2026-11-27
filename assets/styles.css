@@ -1,0 +1,143 @@
+:root {
+  --primary: #355f51;
+  --primary-dark: #24473d;
+  --accent: #d4a72c;
+  --surface: #ffffff;
+  --surface-soft: #f5f8f7;
+  --border: #dde7e3;
+  --text: #20302b;
+  --muted: #667973;
+  --danger-soft: #fff2ed;
+}
+
+html, body, [class*="css"] {
+  font-family: Inter, "Segoe UI", sans-serif;
+  color: var(--text);
+}
+
+.stApp {
+  background: #f7faf9;
+}
+
+[data-testid="stSidebar"] {
+  background: #eef4f2;
+  border-right: 1px solid var(--border);
+}
+
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
+  color: var(--text);
+}
+
+.app-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.hero-card,
+.status-banner,
+.content-card,
+.empty-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(38, 70, 61, 0.05);
+}
+
+.hero-card {
+  padding: 1.5rem 1.75rem;
+  border-left: 5px solid var(--primary);
+  margin-bottom: 1rem;
+}
+
+.status-banner {
+  padding: 0.85rem 1rem;
+  background: var(--surface-soft);
+  margin-bottom: 1.25rem;
+}
+
+.content-card {
+  padding: 1.25rem;
+}
+
+.empty-card {
+  padding: 2.25rem 1.5rem;
+  text-align: center;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbfa 100%);
+}
+
+.empty-card__icon {
+  font-size: 2rem;
+  line-height: 1;
+  margin-bottom: 0.75rem;
+}
+
+.empty-card__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.empty-card__description {
+  color: var(--muted);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.section-heading {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0.75rem 0;
+}
+
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  min-height: 112px;
+}
+
+.metric-card__label {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-bottom: 0.35rem;
+}
+
+.metric-card__value {
+  color: var(--primary-dark);
+  font-size: 1.55rem;
+  font-weight: 750;
+}
+
+[data-testid="stMetric"] {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+[data-testid="stTable"], [data-testid="stDataFrame"] {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.demo-badge {
+  display: inline-block;
+  background: #fff4cf;
+  color: #705500;
+  border: 1px solid #ead17a;
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.disclaimer {
+  color: var(--muted);
+  font-size: 0.82rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+  margin-top: 1.25rem;
+}

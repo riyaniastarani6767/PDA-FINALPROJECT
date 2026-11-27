@@ -1,0 +1,132 @@
+{
+  "verification_status": "verified",
+  "verification_timestamp": "2026-11-27T06:05:57Z",
+  "python_version": "3.12.3",
+  "verification_process_version": "1.0",
+  "model_artifacts": {
+    "Random Forest": {
+      "sha256": "sha256:b414f5921fb66c607e99cc8e94b98bbd81137d9ecf17921390c3fbe0b44251eb",
+      "path": "/home/made-ananta-adnyana/Documents/PDA-FINALPROJECT/models/model_rf.pkl"
+    },
+    "Support Vector Machine": {
+      "sha256": "sha256:b1accb5c174df1ff0a289b32dfb842a4c171d4f0b0fb621332d89ff7edb62370",
+      "path": "/home/made-ananta-adnyana/Documents/PDA-FINALPROJECT/models/model_svm.pkl"
+    }
+  },
+  "preprocessing_manifest": {
+    "path": "/home/made-ananta-adnyana/Documents/PDA-FINALPROJECT/models/preprocessing_manifest.json",
+    "sha256": "sha256:990a2fb95a4f7214d802f5cd25169bbbbf9a2743f734ccac24a79fc3c097bc3e"
+  },
+  "canonical_feature_count": 30,
+  "canonical_feature_order": [
+    "radius_mean",
+    "texture_mean",
+    "perimeter_mean",
+    "area_mean",
+    "smoothness_mean",
+    "compactness_mean",
+    "concavity_mean",
+    "concave_points_mean",
+    "symmetry_mean",
+    "fractal_dimension_mean",
+    "radius_se",
+    "texture_se",
+    "perimeter_se",
+    "area_se",
+    "smoothness_se",
+    "compactness_se",
+    "concavity_se",
+    "concave_points_se",
+    "symmetry_se",
+    "fractal_dimension_se",
+    "radius_worst",
+    "texture_worst",
+    "perimeter_worst",
+    "area_worst",
+    "smoothness_worst",
+    "compactness_worst",
+    "concavity_worst",
+    "concave_points_worst",
+    "symmetry_worst",
+    "fractal_dimension_worst"
+  ],
+  "canonical_feature_contract_fingerprint": "sha256:aa9443e82324e5fdd70ec3132fc2bdbcab190e9326f815fd3f910272ebc1ed8c",
+  "positive_class_mapping": {
+    "Benign": 0,
+    "Malignant": 1
+  },
+  "missing_value_policy": "REJECT",
+  "models": {
+    "Random Forest": {
+      "status": "verified",
+      "model_type": "random_forest.rf_manual.RandomForestManual",
+      "n_features": 30,
+      "configuration": {
+        "n_estimators": 100,
+        "max_depth": null,
+        "min_samples_split": 2,
+        "max_features": "sqrt",
+        "random_state": 42
+      }
+    },
+    "Support Vector Machine": {
+      "status": "verified",
+      "model_type": "svm.svm_manual.SVMManual",
+      "C": 1.0,
+      "gamma": "scale",
+      "gamma_value": 0.033333333333333326,
+      "probability": true,
+      "n_features": 30,
+      "decision_function": true,
+      "platt_scaling": "calibrated_predict_proba",
+      "hard_prediction_source": "predict()",
+      "probability_source": "predict_proba()"
+    }
+  },
+  "test_summary": {
+    "artifact_integrity": "passed",
+    "single_inference": "passed",
+    "batch_inference": "passed",
+    "invalid_input": "passed",
+    "database_integration": "passed",
+    "complete_pytest": "passed",
+    "complete_pytest_output": "........................................................................ [ 78%]\n....................                                                     [100%]\n92 passed in 6.00s"
+  },
+  "checks": {
+    "artifact_integrity": {
+      "status": "passed",
+      "payloads_loaded": true,
+      "manifest_valid": true,
+      "scalers_fitted": true
+    },
+    "model_identity": {
+      "status": "passed",
+      "positive_class": "Malignant=1"
+    },
+    "single_inference": {
+      "status": "passed",
+      "samples_per_model": 3,
+      "probability_contract": "passed"
+    },
+    "batch_inference": {
+      "status": "passed",
+      "samples_per_model": 3,
+      "single_vs_batch_consistent": true
+    },
+    "invalid_input": {
+      "status": "passed",
+      "cases": [
+        "missing_value",
+        "missing_feature",
+        "extra_feature",
+        "invalid_model"
+      ]
+    },
+    "database_integration": {
+      "status": "passed",
+      "production_db_used": false,
+      "temp_db_success": true,
+      "unverified_save_blocked": true
+    }
+  }
+}
