@@ -732,7 +732,8 @@ def prediksi_pasien(nama_model: str, fitur_berurut: dict, input_method: str = "m
     return predict_single(fitur_berurut, nama_model, input_method)
 
 
-def simpan_prediksi_terverifikasi(respons: dict, fitur: dict, input_method: str, db_path=None, actual_label=None) -> int:
+def simpan_prediksi_terverifikasi(respons: dict, fitur: dict, input_method: str, db_path=None, actual_label=None,
+                                  id_pasien: int | None = None) -> int:
     """Menyimpan hanya respons inferensi nyata yang masih tercatat oleh backend."""
     if not isinstance(respons, dict):
         raise PermissionError("Respons prediksi tidak valid.")
@@ -768,13 +769,15 @@ def simpan_prediksi_terverifikasi(respons: dict, fitur: dict, input_method: str,
         "fitur": fitur,
         "actual_label": actual_label,
         "verified": True,
+        "id_pasien": id_pasien,
     }
     if db_path is not None:
         kwargs["db_path"] = db_path
     return simpan_prediksi(**kwargs)
 
 
-def simpan_batch_prediksi_terverifikasi(respons: dict, dataframe: pd.DataFrame, db_path=None) -> list[int]:
+def simpan_batch_prediksi_terverifikasi(respons: dict, dataframe: pd.DataFrame, db_path=None,
+                                        label_asli: list | None = None, id_pasien: list | None = None) -> list[int]:
     """Menyimpan hanya baris sukses dari respons batch nyata yang masih tercatat backend."""
     if not isinstance(respons, dict) or not isinstance(dataframe, pd.DataFrame):
         raise PermissionError("Respons batch atau DataFrame tidak valid.")
@@ -813,8 +816,9 @@ def simpan_batch_prediksi_terverifikasi(respons: dict, dataframe: pd.DataFrame, 
             "probability_malignant": float(detail["probability_malignant"]),
             "input_method": "csv",
             "fitur": fitur,
-            "actual_label": None,
+            "actual_label": label_asli[position - 1] if label_asli and position - 1 < len(label_asli) else None,
             "verified": True,
+            "id_pasien": id_pasien[position - 1] if id_pasien and position - 1 < len(id_pasien) else None,
         }
         if db_path is not None:
             kwargs["db_path"] = db_path

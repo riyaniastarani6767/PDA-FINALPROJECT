@@ -9,7 +9,11 @@ from preprocessing.data import FITUR, KARAKTERISTIK
 from tampilan import grafik, sumber
 from tampilan.gaya import catatan, kaki, kartu_angka, kartu_hasil, kepala, tautan
 
-METODE_LABEL = {"sample": "Contoh dataset", "manual": "Input manual", "csv": "Unggah CSV"}
+
+
+def _wib(nilai) -> str:
+    w = pd.to_datetime(nilai, utc=True, errors="coerce")
+    return w.tz_convert("Asia/Jakarta").strftime("%d-%m-%Y %H:%M:%S WIB") if pd.notna(w) else "—"
 
 kepala(
     "Riwayat Prediksi",
@@ -32,7 +36,6 @@ if semua.empty:
 
 waktu = pd.to_datetime(semua["Tanggal dan waktu"], utc=True, errors="coerce").dt.tz_convert("Asia/Jakarta")
 semua = semua.assign(_waktu=waktu, _tanggal=waktu.dt.date)
-semua["Metode input"] = semua["Metode input"].map(lambda v: METODE_LABEL.get(v, v))
 
 # ---------------------------------------------------------------- Ringkasan
 dengan_label = semua[semua["Label aktual dataset"].notna()]
@@ -52,10 +55,9 @@ with k[3]:
 
 # ---------------------------------------------------------------- Filter
 st.markdown("### Filter")
-f1, f2, f3, f4 = st.columns([1, 1, 1, 1.4])
+f1, f2, f4 = st.columns([1, 1, 1.4])
 model_f = f1.selectbox("Model", ["Semua"] + sorted(semua["Model"].unique()))
 hasil_f = f2.selectbox("Hasil", ["Semua", "Benign", "Malignant"])
-metode_f = f3.selectbox("Metode input", ["Semua"] + sorted(semua["Metode input"].dropna().unique()))
 tgl_min, tgl_max = semua["_tanggal"].min(), semua["_tanggal"].max()
 rentang_tgl = f4.date_input("Rentang tanggal", value=(tgl_min, tgl_max), min_value=tgl_min, max_value=tgl_max)
 cari = st.text_input("Cari ID riwayat", placeholder="contoh: 12")
@@ -65,8 +67,6 @@ if model_f != "Semua":
     data = data[data["Model"] == model_f]
 if hasil_f != "Semua":
     data = data[data["Hasil klasifikasi"] == hasil_f]
-if metode_f != "Semua":
-    data = data[data["Metode input"] == metode_f]
 if isinstance(rentang_tgl, (tuple, list)) and len(rentang_tgl) == 2:
     data = data[(data["_tanggal"] >= rentang_tgl[0]) & (data["_tanggal"] <= rentang_tgl[1])]
 if cari.strip():
@@ -77,8 +77,9 @@ if data.empty:
     st.warning("Tidak ada riwayat yang sesuai filter. Ubah atau kosongkan filter.")
 else:
     tampil = data.assign(Waktu=data["_waktu"].dt.strftime("%d-%m-%Y %H:%M WIB"))[
-        ["ID", "Waktu", "Model", "Hasil klasifikasi", "Probabilitas Malignant", "Metode input", "Label aktual dataset"]
+        ["ID", "ID pasien", "Waktu", "Model", "Hasil klasifikasi", "Probabilitas Malignant", "Label aktual dataset"]
     ].rename(columns={"Label aktual dataset": "Label asli"})
+    tampil["Label asli"] = tampil["Label asli"].fillna("—")
     st.dataframe(
         tampil,
         hide_index=True,
@@ -87,7 +88,8 @@ else:
         column_config={
             "Probabilitas Malignant": st.column_config.ProgressColumn(
                 "Probabilitas Malignant", min_value=0.0, max_value=1.0, format="%.3f"),
-            "ID": st.column_config.NumberColumn("ID", format="%d"),
+            "ID": st.column_config.NumberColumn("ID prediksi", format="%d"),
+            "ID pasien": st.column_config.NumberColumn("ID pasien", format="%d"),
         },
     )
     st.download_button(":material/download: Unduh riwayat (CSV)", tampil.to_csv(index=False).encode("utf-8"),
@@ -99,7 +101,7 @@ else:
         "Pilih ID riwayat",
         options=data["ID"].tolist(),
         format_func=lambda i: f"ID {i} — " + " · ".join(
-            str(v) for v in data.loc[data["ID"] == i, ["Model", "Hasil klasifikasi", "Metode input"]].iloc[0]),
+            str(v) for v in data.loc[data["ID"] == i, ["Model", "Hasil klasifikasi"]].iloc[0]),
     )
     detail = ambil_detail(int(pilih), db_path=db_path)
     if detail is None:
@@ -112,7 +114,8 @@ else:
             w = pd.to_datetime(detail["Tanggal dan waktu"], utc=True, errors="coerce")
             st.markdown(
                 f"- **Waktu:** {w.tz_convert('Asia/Jakarta').strftime('%d-%m-%Y %H:%M:%S WIB') if pd.notna(w) else '—'}\n"
-                f"- **Metode input:** {METODE_LABEL.get(detail['Metode input'], detail['Metode input'])}\n"
+                f"- **ID pasien:** {detail['ID pasien']}\n"
+                f"- **Waktu input data pasien:** {_wib(detail['Waktu input'])}\n"
                 f"- **Label asli dataset:** {detail['Label aktual dataset'] or '— (bukan dari dataset)'}"
             )
         fitur = detail["Fitur"]

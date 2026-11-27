@@ -9,7 +9,6 @@ from tampilan import grafik, sumber
 from tampilan.gaya import kaki, kartu_angka, kepala, tautan
 
 METRIK = {"accuracy": "Accuracy", "precision": "Precision", "recall": "Recall", "f1_score": "F1-Score"}
-METODE_LABEL = {"sample": "Contoh dataset", "manual": "Input manual", "csv": "Unggah CSV"}
 
 kepala(
     "Dashboard",
@@ -80,9 +79,13 @@ else:
             per_model = riwayat.groupby(["Model", "Hasil klasifikasi"]).size().unstack(fill_value=0)
             per_model["Total"] = per_model.sum(axis=1)
             st.dataframe(per_model, use_container_width=True)
-            st.markdown("**Metode input**")
-            st.dataframe(riwayat["Metode input"].map(lambda v: METODE_LABEL.get(v, v)).value_counts()
-                         .rename_axis("Metode").rename("Jumlah").to_frame(), use_container_width=True)
+            st.markdown("**Data pasien**")
+            n_pasien = riwayat["ID pasien"].nunique()
+            st.dataframe(pd.DataFrame({
+                "Keterangan": ["Pasien unik", "Dengan diagnosis asli", "Hasil prediksi"],
+                "Jumlah": [n_pasien, int(riwayat.drop_duplicates("ID pasien")["Label aktual dataset"].notna().sum()),
+                           len(riwayat)],
+            }), hide_index=True, use_container_width=True)
     with c2:
         with st.container(border=True):
             st.markdown("**5 prediksi terakhir**")
